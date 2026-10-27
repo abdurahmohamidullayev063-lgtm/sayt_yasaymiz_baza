@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sayt Yasaymiz - Boshqaruv Paneli</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        .section { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-radius: 6px; }
+        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #218838; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f8f9fa; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Sayt Yasaymiz - Biznes Paneli</h1>
+
+    <!-- Mijozlar bo'limi -->
+    <div class="section">
+        <h3>Mijozlar ro'yxati</h3>
+        <input type="text" id="clientName" placeholder="Mijoz ismi va telefoni">
+        <button onclick="addClient()">Mijoz qo'shish</button>
+        <table>
+            <thead><tr><th>Ism / Ma'lumot</th></tr></thead>
+            <tbody id="clientTable"></tbody>
+        </table>
+    </div>
+
+    <!-- Tranzaksiyalar / Moliya -->
+    <div class="section">
+        <h3>Moliya (Kirim/Chiqim)</h3>
+        <input type="text" id="transDesc" placeholder="Izoh (masalan: Sayt uchun avans)">
+        <input type="number" id="transAmount" placeholder="Summasi (so'm)">
+        <button onclick="addTransaction()">Tranzaksiya qo'shish</button>
+        <table>
+            <thead><tr><th>Izoh</th><th>Summa</th></tr></thead>
+            <tbody id="transTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let appData = { clients: [], transactions: [], workers: [] };
+
+    async function loadData() {
+        try {
+            const res = await fetch('/api/data');
+            appData = await res.json();
+            render();
+        } catch (err) {
+            console.error("Ma'lumotni yuklashda xatolik:", err);
+        }
+    }
+
+    async function saveData() {
+        await fetch('/api/data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(appData)
+        });
+        render();
+    }
+
+    function addClient() {
+        const name = document.getElementById('clientName').value;
+        if (!name) return;
+        appData.clients.push({ name });
+        document.getElementById('clientName').value = '';
+        saveData();
+    }
+
+    function addTransaction() {
+        const desc = document.getElementById('transDesc').value;
+        const amount = document.getElementById('transAmount').value;
+        if (!desc || !amount) return;
+        appData.transactions.push({ desc, amount });
+        document.getElementById('transDesc').value = '';
+        document.getElementById('transAmount').value = '';
+        saveData();
+    }
+
+    function render() {
+        const clientTable = document.getElementById('clientTable');
+        clientTable.innerHTML = appData.clients.map(c => `<tr><td>${c.name}</td></tr>`).join('');
+
+        const transTable = document.getElementById('transTable');
+        transTable.innerHTML = appData.transactions.map(t => `<tr><td>${t.desc}</td><td>${t.amount} so'm</td></tr>`).join('');
+    }
+
+    loadData();
+</script>
+
+</body>
+</html>
